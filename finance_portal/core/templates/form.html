@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container my-5">
+
+    <div class="shadow-lg"
+         style="background-color: #171717; border: solid thin; border-radius: 10px; padding: 1.5rem;">
+
+        <!-- Header -->
+        <div class="text-white d-flex align-items-center px-3 mb-4"
+             style="background-color: #212121; height: 4rem; border-radius: 10px;">
+            <h3 class="mb-0">
+                {% if is_edit %}
+                    ✏️ Edit Revenue (ID: {{ tid }})
+                {% else %}
+                    ➕ New Revenue
+                {% endif %}
+            </h3>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="card-body px-2">
+
+                <h5 class="mb-3" style="color: aliceblue;">Revenues Details</h5>
+
+                <div class="row g-4 mb-4">
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold" style="color: aliceblue;">
+                            {{ form.data.label }}
+                        </label>
+                        {{ form.data|add_class:"form-control form-control-lg" }}
+                        {% for error in form.data.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold" style="color: aliceblue;">
+                            {{ form.receita.label }}
+                        </label>
+                        {{ form.receita|add_class:"form-select form-select-lg" }}
+                        {% for error in form.receita.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+                <h5 class="mb-3" style="color: aliceblue;">Amount and Description</h5>
+
+                <div class="row g-4">
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold" style="color: aliceblue;">
+                            {{ form.valor.label }}
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">$</span>
+                            {{ form.valor|attr:"placeholder:0.00"|add_class:"form-control" }}
+                        </div>
+                        {% for error in form.valor.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold" style="color: aliceblue;">
+                            {{ form.descricao.label }}
+                        </label>
+                        {{ form.descricao|add_class:"form-control form-control-lg"|attr:"placeholder:e.g., Office Rent, Q4 Sales, etc." }}
+                        {% for error in form.descricao.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="card-footer border-0 pt-4 pb-2 d-flex justify-content-end">
+                <a href="{% url 'create_revenue' %}" class="btn btn-lg btn-outline-secondary me-3">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-lg" style="background-color: #91465e; color: aliceblue;">
+                    {% if is_edit %}
+                        Update
+                    {% else %}
+                        Save
+                    {% endif %}
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+{% endblock content %}
