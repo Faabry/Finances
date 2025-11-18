@@ -6,9 +6,9 @@ load_dotenv()
 
 def get_conn():
     return psycopg2.connect(
-        user=os.getenv("user"),
-        password=os.getenv("password"),
-        host=os.getenv("host"),
-        port=os.getenv("port"),
-        dbname=os.getenv("dbname")
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        dbname=os.getenv("DB_NAME"),
     )
