@@ -1,5 +1,6 @@
 from .db import get_conn
 
+# region Revenues
 def insert_transaction(data):
     conn = get_conn()
     cur = conn.cursor()
@@ -106,7 +107,9 @@ def get_transaction_by_id(tid):
         "descricao": row[3],
         "valor": row[4],
     }
+# endregion Revenues
 
+# region Spents
 def insert_spent(data):
     conn = get_conn()
     cur = conn.cursor()
@@ -202,13 +205,9 @@ def get_spent_by_id(sid):
         "valor": row[3],
         "data": row[4],
     }
+# endregion Spents
 
-
-
-# ============================================================
-# ===================== INVESTMENTS ==========================
-# ============================================================
-
+# region Investments
 def insert_investment(data):
     conn = get_conn()
     cur = conn.cursor()
@@ -339,3 +338,4 @@ def get_investment_by_id(iid):
         "origem": row[10],
         "ativo": row[11],
     }
+# endregion Investments
