@@ -20,7 +20,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'default-insecure-key-for-local-only')
 
 # Use environment variable for DEBUG, defaulting to False for safety
 # If DEBUG=True is set in .env, it runs in development mode.
-DEBUG = True
+DEBUG = False
 
 # Allow all hosts (*) for initial deployment setup, but restrict in production.
 # This variable is loaded from the environment (e.g., ALLOWED_HOSTS="app.example.com,127.0.0.1")
