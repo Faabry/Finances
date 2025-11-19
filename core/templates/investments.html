@@ -63,51 +63,97 @@
 
     {% if transactions.has_other_pages %}
 <nav aria-label="Transaction page navigation">
-    <ul class="pagination justify-content-center">
-        <li class="page-item {% if not transactions.has_previous %}disabled{% endif %}">
-            <a class="page-link" href="?page=1" aria-label="First">
-                <span aria-hidden="true">&laquo;&laquo;</span> First
+    <ul class="pagination justify-content-center" style="padding-top: 10px;">
+
+    <!-- <li class="page-item {% if not transactions.has_previous %}disabled{% endif %}">
+        <a class="page-link custom-page-link" href="?page=1" aria-label="First">
+            <span aria-hidden="true">&laquo;&laquo;</span> First
+        </a>
+    </li> -->
+
+    {% if transactions.has_previous %}
+        <li class="page-item">
+            <a class="btn" href="?page={{ transactions.previous_page_number }}" style="border: solid; border-width: thin; background-color: #171717; color: gray;">
+                ⇐
             </a>
         </li>
-        
-        {% if transactions.has_previous %}
-             <li class="page-item">
-                <a class="page-link" href="?page={{ transactions.previous_page_number }}" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span> Previous
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled"><span class="page-link">&laquo; Previous</span></li>
-        {% endif %}
-
+    {% else %}
         <li class="page-item disabled">
-            <span class="page-link text-dark">
-                Page {{ transactions.number }} of {{ transactions.paginator.num_pages }}
-            </span>
+            <span class="page-link" style="border: solid; border-width: thin; background-color: #171717; color: gray;">⇐</span>
         </li>
+    {% endif %}
 
-        {% if transactions.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ transactions.next_page_number }}" aria-label="Next">
-                    Next <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
-        {% endif %}
-        
-        <li class="page-item {% if not transactions.has_next %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ transactions.paginator.num_pages }}" aria-label="Last">
-                 Last <span aria-hidden="true">&raquo;&raquo;</span>
+   <li class="page-item">
+    <div class="input-group input-group-sm" style="height: 38px;"> 
+
+        <form class="d-flex align-items-center m-0" onsubmit="event.preventDefault(); goToPage({{ transactions.paginator.num_pages }}, {{ transactions.number }});">
+            
+            <span class="input-group-text custom-page-link" 
+                  style="border-top-right-radius: 0; border-bottom-right-radius: 0; padding-left: 0.75rem; background-color: #171717; color: aliceblue; border: none;">
+                Page
+            </span>
+
+            <input type="number" 
+                   id="page-input" 
+                   class="form-control form-control-sm text-center" 
+                   value="{{ transactions.number }}" 
+                   min="1" 
+                   max="{{ transactions.paginator.num_pages }}" 
+                   style="width: 60px; height: 38px; border-radius: 10px; border-color: gray; background-color: #171717; color: aliceblue;"
+                   aria-label="Current Page Number Input">
+
+            <span class="input-group-text custom-page-link" 
+                  style="border-top-left-radius: 10px; border-bottom-left-radius: 0; border: none; background-color: #171717; color: aliceblue;">
+                of {{ transactions.paginator.num_pages }}
+            </span>            
+        </form>
+    </div>
+</li>
+    {% if transactions.has_next %}
+        <li class="page-item">
+            <a class="btn" href="?page={{ transactions.next_page_number }}" style="border: solid; border-width: thin; background-color: #171717; color: gray;">
+                ⇒
             </a>
         </li>
-    </ul>
+    {% else %}
+        <li class="page-item disabled">
+            <span class="page-link" style="border: solid; border-width: thin; background-color: #171717; color: gray;">⇒</span>
+        </li>
+    {% endif %}
+
+    <!-- <li class="page-item {% if not transactions.has_next %}disabled{% endif %}">
+        <a class="page-link custom-page-link" href="?page={{ transactions.paginator.num_pages }}" aria-label="Last">
+            Last <span aria-hidden="true">&raquo;&raquo;</span>
+        </a>
+    </li> -->
+</ul>
+
 </nav>
 {% endif %}
 
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script>
+    function goToPage(totalPages) {
+        const inputElement = document.getElementById('page-input');
+        let pageNumber = parseInt(inputElement.value, 10);
+
+        // Basic validation
+        if (isNaN(pageNumber) || pageNumber < 1 || pageNumber > totalPages) {
+            alert(`Please enter a valid page number between 1 and ${totalPages}.`);
+            inputElement.value = {{ transactions.number }}; // Reset to current page
+            return;
+        }
+
+        // Construct the new URL
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('page', pageNumber);
+
+        // Navigate to the new URL
+        window.location.href = currentUrl.toString();
+    };
+</script>
 {% endblock content %}
 </body>
 </html>

@@ -7,6 +7,7 @@ from .repository import (
     insert_investment, update_investment, delete_investment as del_investment, list_investments, get_investment_by_id,
 )
 
+# region Revenues
 def index(request):
     sort_by = request.GET.get('sort', 'data')
     sort_order = request.GET.get('order', 'asc')
@@ -59,7 +60,9 @@ def edit_revenue(request, tid):
 def delete_revenue(request, tid):
     delete_transaction(tid)
     return redirect("index")
+# endregion Revenues
 
+# region Spents
 def spents_list(request):
     sort_by = request.GET.get('sort', 'data')
     sort_order = request.GET.get('order', 'asc')
@@ -112,7 +115,9 @@ def edit_spent(request, sid):
 def delete_spent(request, sid):
     del_spent(sid)
     return redirect("spents_list")
+# endregion Spents
 
+# region Investments
 def investments_list(request):
     sort_by = request.GET.get('sort', 'data_investimento')
     sort_order = request.GET.get('order', 'asc')
@@ -173,3 +178,9 @@ def edit_investment(request, iid):
 def delete_investment(request, iid):
     del_investment(iid)
     return redirect("investments_list")
+# endregion Investments
+
+# region Dashboard
+def dashboard(request):
+    return render(request, "dashboard.html")
+# endregion Dashboard

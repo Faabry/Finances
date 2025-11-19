@@ -1,11 +1,8 @@
-
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Revenues (já existente)
-    # path('edit/<int:tid>/', views.edit_revenue, name='edit'),  
-    # path('delete/<int:tid>/', views.delete_revenue, name='delete'),  
+    # Revenues      
     path('', views.index, name='index'),
     path('revenue/create/', views.create_revenue, name='create_revenue'),
     path('revenue/<int:tid>/edit/', views.edit_revenue, name='edit_revenue'),
@@ -22,4 +19,7 @@ urlpatterns = [
     path('investments/create/', views.create_investment, name='create_investment'),
     path('investments/<int:iid>/edit/', views.edit_investment, name='edit_investment'),
     path('investments/<int:iid>/delete/', views.delete_investment, name='delete_investment'),
+
+    # Dashboard
+    path('dashboard/', views.dashboard, name='dashboard'),
 ]
