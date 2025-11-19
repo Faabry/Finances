@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 style="color: aliceblue;">Power BI Dashboard</h2>
+    </div>
+
+    <div class="embed-responsive embed-responsive-16by9" style="min-height: 80vh;">
+        <iframe title="Your Report Title" 
+                width="100%" 
+                height="800" 
+                src="https://app.powerbi.com/view?r=eyJrIjoiYzYyOWI4ZTMtMmVmNS00OTNkLTg3OWYtZjJkY2VlNzkwZDcwIiwidCI6Ijg1YWI4ZjE2LTY3YjMtNDhhNS05OTM4LTNhNGQ3YzYwNDM0MSJ9" 
+                frameborder="0" 
+                allowFullScreen="true" 
+                style="border: 1px solid #333; background-color: #212121;">
+        </iframe>
+    </div>
+    </div>
+
+{% endblock content %}

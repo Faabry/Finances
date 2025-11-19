@@ -1,5 +1,3 @@
-# forms.py
-
 from django import forms
 
 # Define the choices as a tuple of tuples: (value_stored_in_db, human_readable_label)
