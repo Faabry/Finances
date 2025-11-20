@@ -52,7 +52,7 @@ def list_transactions(sort_by='data', sort_order='asc'):
     # 1. Validate and sanitize the sort parameters
     
     # Default column is 'id' or 'data' if the provided sort_by is invalid
-    column_name = VALID_COLUMNS.get(sort_by.lower(), 'data')
+    column_name = VALID_COLUMNS.get(sort_by.lower(), 'id')
     
     # Validate sort order (must be 'ASC' or 'DESC')
     order = 'DESC' if sort_order.lower() == 'desc' else 'ASC'
@@ -302,6 +302,44 @@ def list_investments(sort_by='data_investimento', sort_order='asc'):
     conn.close()
 
     return rows
+
+def list_investments_active(active=None, sort_by='data_investimento', sort_order='desc'):
+    conn = get_conn()
+    cur = conn.cursor()
+
+    VALID_COLUMNS = {
+        # same as before
+    }
+
+    column_name = VALID_COLUMNS.get(sort_by.lower(), 'data_investimento')
+    order = 'DESC' if sort_order.lower() == 'desc' else 'ASC'
+
+    # Dynamic SQL
+    if active is None:
+        where_clause = ""
+        params = ()
+    else:
+        where_clause = "WHERE ativo = %s"
+        params = (active,)
+
+    sql = f"""
+        SELECT 
+            id, tipo, instituicao, ticker, aporte, quantidade,
+            preco_unit, valor, data_investimento,
+            data_vencimento, origem, ativo
+        FROM public.Investments
+        {where_clause}
+        ORDER BY {column_name} {order}
+    """
+
+    cur.execute(sql, params)
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return rows
+
 
 
 def get_investment_by_id(iid):

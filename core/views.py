@@ -5,11 +5,12 @@ from .repository import (
     insert_transaction, update_transaction, delete_transaction, list_transactions, get_transaction_by_id,
     insert_spent, update_spent, delete_spent as del_spent, list_spents, get_spent_by_id,
     insert_investment, update_investment, delete_investment as del_investment, list_investments, get_investment_by_id,
+    list_investments_active
 )
 
 # region Revenues
 def index(request):
-    sort_by = request.GET.get('sort', 'data')
+    sort_by = request.GET.get('sort', 'id')
     sort_order = request.GET.get('order', 'asc')
 
     all_transactions = list_transactions(sort_by=sort_by, sort_order=sort_order)
@@ -119,10 +120,26 @@ def delete_spent(request, sid):
 
 # region Investments
 def investments_list(request):
+    # --- Filter governance ---
+    active_param = request.GET.get('active', '').lower()
+
+    if active_param == 'true':
+        active = True
+    elif active_param == 'false':
+        active = False
+    else:
+        active = None
+
+    # --- Sorting governance ---
     sort_by = request.GET.get('sort', 'data_investimento')
     sort_order = request.GET.get('order', 'asc')
 
-    all_investments = list_investments(sort_by=sort_by, sort_order=sort_order)
+    # --- Query execution with filtering + sorting ---
+    all_investments = list_investments_active(
+        active=active,
+        sort_by=sort_by,
+        sort_order=sort_order
+    )
 
     COLUMN_MAP_LIST = [
         'data_investimento', 'tipo', 'instituicao', 'ticker',
@@ -130,19 +147,22 @@ def investments_list(request):
         'data_vencimento', 'origem', 'ativo'
     ]
 
+    # --- Pagination governance ---
     paginator = Paginator(all_investments, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
+    # --- Context ---
     context = {
-        'transactions': page_obj,  # ou 'investments'
+        'transactions': page_obj,      # aligns with your template
         'current_sort': sort_by,
         'current_order': sort_order,
+        'current_active': active,      # NEW: required for <th> links
         'column_list': COLUMN_MAP_LIST,
         'page_title': 'Investments',
         'entity': 'investments',
     }
-    
+
     return render(request, "investments.html", context)
 
 def create_investment(request):
