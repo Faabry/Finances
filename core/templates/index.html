@@ -35,6 +35,7 @@
         <table class="table-striped table-hover table-bordered align-middle" style="background-color: #171717; width: 100%; margin-bottom: 1rem;">
             <thead style="color: aliceblue; background-color: #212121;">
                 <tr>
+                    <th>Id</th>
                     <th>Data</th>
                     <th>Receita</th>
                     <th>Decricao</th>
@@ -45,6 +46,7 @@
             <tbody style="color: aliceblue;">
                 {% for t in transactions %}
                 <tr>
+                    <td>{{ t.0 }}</td>
                     <td>{{ t.1 }}</td>
                     <td>{{ t.2 }}</td>
                     <td>{{ t.3 }}</td>
@@ -66,12 +68,6 @@
     {% if transactions.has_other_pages %}
 <nav aria-label="Transaction page navigation">
     <ul class="pagination justify-content-center" style="padding-top: 10px;">
-
-    <!-- <li class="page-item {% if not transactions.has_previous %}disabled{% endif %}">
-        <a class="page-link custom-page-link" href="?page=1" aria-label="First">
-            <span aria-hidden="true">&laquo;&laquo;</span> First
-        </a>
-    </li> -->
 
     {% if transactions.has_previous %}
         <li class="page-item">
@@ -123,11 +119,6 @@
         </li>
     {% endif %}
 
-    <!-- <li class="page-item {% if not transactions.has_next %}disabled{% endif %}">
-        <a class="page-link custom-page-link" href="?page={{ transactions.paginator.num_pages }}" aria-label="Last">
-            Last <span aria-hidden="true">&raquo;&raquo;</span>
-        </a>
-    </li> -->
 </ul>
 
 </nav>
