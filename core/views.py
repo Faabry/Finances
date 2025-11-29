@@ -12,11 +12,19 @@ from .repository import (
 def index(request):
     sort_by = request.GET.get('sort', 'id')
     sort_order = request.GET.get('order', 'asc')
+    # Get the search term from the query parameters (e.g., ?search=term)
+    search_term = request.GET.get('search', None)
 
-    all_transactions = list_transactions(sort_by=sort_by, sort_order=sort_order)
+    # Pass the search_term to the repository function
+    all_transactions = list_transactions(
+        sort_by=sort_by, 
+        sort_order=sort_order,
+        search_term=search_term # <--- NEW
+    )
 
     COLUMN_MAP_LIST = ['data', 'receita', 'descricao', 'valor']
 
+    # Paginator setup remains the same
     paginator = Paginator(all_transactions, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -25,6 +33,7 @@ def index(request):
         'transactions': page_obj,
         'current_sort': sort_by,
         'current_order': sort_order,
+        'current_search': search_term or '', # <--- NEW: Pass the search term to the template
         'column_list': COLUMN_MAP_LIST,
         'page_title': 'Revenues',
         'entity': 'revenue',
@@ -67,8 +76,14 @@ def delete_revenue(request, tid):
 def spents_list(request):
     sort_by = request.GET.get('sort', 'data')
     sort_order = request.GET.get('order', 'asc')
+    search_term = request.GET.get('search', None) # 🎯 1. Get search term
 
-    all_spents = list_spents(sort_by=sort_by, sort_order=sort_order)
+    # 🎯 2. Pass search_term to the repository function
+    all_spents = list_spents(
+        sort_by=sort_by, 
+        sort_order=sort_order,
+        search_term=search_term
+    )
 
     COLUMN_MAP_LIST = ['data', 'despesas', 'descricao', 'valor']
 
@@ -77,15 +92,17 @@ def spents_list(request):
     page_obj = paginator.get_page(page_number)
     
     context = {
-        'transactions': page_obj,  # pode renomear para 'spents' se quiser trocar no template
+        'transactions': page_obj,
         'current_sort': sort_by,
         'current_order': sort_order,
         'column_list': COLUMN_MAP_LIST,
         'page_title': 'Spents',
         'entity': 'spents',
+        'current_search': search_term or '', # 🎯 3. Add search context for persistence
     }
     
-    return render(request, "spents.html", context)  # pode reutilizar index.html se parametrizar
+    return render(request, "spents.html", context)
+
 
 def create_spent(request):
     if request.method == "POST":
@@ -133,12 +150,14 @@ def investments_list(request):
     # --- Sorting governance ---
     sort_by = request.GET.get('sort', 'data_investimento')
     sort_order = request.GET.get('order', 'asc')
+    search_term = request.GET.get('search', None)
 
     # --- Query execution with filtering + sorting ---
     all_investments = list_investments_active(
         active=active,
         sort_by=sort_by,
-        sort_order=sort_order
+        sort_order=sort_order,
+        search_term=search_term
     )
 
     COLUMN_MAP_LIST = [
@@ -158,6 +177,7 @@ def investments_list(request):
         'current_sort': sort_by,
         'current_order': sort_order,
         'current_active': active,      # NEW: required for <th> links
+        'current_search': search_term or '', # NEW: for search persistence
         'column_list': COLUMN_MAP_LIST,
         'page_title': 'Investments',
         'entity': 'investments',
@@ -184,13 +204,16 @@ def edit_investment(request, iid):
         return redirect("investments_list")
     
     if request.method == "POST":
-        form = InvestmentForm(request.POST, initial=investment_data)
+        # 🎯 FIX: Remove 'initial=investment_data'. 
+        # On POST, the form should only be bound to the submitted data (request.POST).
+        form = InvestmentForm(request.POST) 
         if form.is_valid():
             data = form.cleaned_data
-            data["ativo"] = True  # hard set
-            insert_investment(data)
+            data["ativo"] = form.cleaned_data.get("ativo", False)
+            update_investment(iid, data)
             return redirect("investments_list")
     else:
+        # This is correct for GET requests
         form = InvestmentForm(initial=investment_data)
         
     return render(request, "form_investments.html", {"form": form, "is_edit": True, "iid": iid, "page_title": "Edit Investment"})

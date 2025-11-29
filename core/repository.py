@@ -45,22 +45,35 @@ VALID_COLUMNS = {
     'valor': 'Valor'
 }
 
-def list_transactions(sort_by='data', sort_order='asc'):
+def list_transactions(sort_by='data', sort_order='asc', search_term=None):
     conn = get_conn()
     cur = conn.cursor()
     
     # 1. Validate and sanitize the sort parameters
-    
-    # Default column is 'id' or 'data' if the provided sort_by is invalid
     column_name = VALID_COLUMNS.get(sort_by.lower(), 'id')
-    
-    # Validate sort order (must be 'ASC' or 'DESC')
     order = 'DESC' if sort_order.lower() == 'desc' else 'ASC'
-
-    # 2. Construct the SQL query with the ORDER BY clause
-    # NOTE: Since the column name is validated against a safe dictionary (VALID_COLUMNS) 
-    # before being inserted, this method is safe against SQL injection in this context.
     
+    # 2. Build the WHERE clause for searching
+    where_clause = ""
+    # Parameters for the query (initially empty)
+    params = []
+    
+    if search_term:
+        # Lowercase the search term for case-insensitive matching
+        # Adjust the columns you want to search through. 
+        # Here, we search 'data', 'Receita', and 'Descricao'.
+        where_clause = """
+            WHERE 
+                LOWER(CAST(data AS TEXT)) LIKE %s OR 
+                LOWER(Receita) LIKE %s OR 
+                LOWER(Descricao) LIKE %s
+        """
+        # Add the search term as a parameter for each field to prevent SQL Injection
+        # We use '%' for wildcards in SQL LIKE queries.
+        search_param = f"%{search_term.lower()}%"
+        params = [search_param, search_param, search_param]
+        
+    # 3. Construct the full SQL query
     sql_query = f"""
         SELECT 
             id, 
@@ -70,12 +83,14 @@ def list_transactions(sort_by='data', sort_order='asc'):
             Valor 
         FROM 
             public.Revenues 
+        {where_clause}
         ORDER BY 
             {column_name} {order}
     """
 
-    # 3. Execute the query
-    cur.execute(sql_query)
+    # 4. Execute the query with dynamic parameters
+    # The 'params' list is empty if no search term, or contains the LIKE terms otherwise.
+    cur.execute(sql_query, params)
     rows = cur.fetchall()
     
     cur.close()
@@ -159,20 +174,35 @@ VALID_COLUMNS_SPENTS = {
 }
 
 
-def list_spents(sort_by='data', sort_order='asc'):
+def list_spents(sort_by='data', sort_order='asc', search_term=None): # 🎯 1. Add search_term
     conn = get_conn()
     cur = conn.cursor()
 
     column_name = VALID_COLUMNS_SPENTS.get(sort_by.lower(), 'data')
     order = 'DESC' if sort_order.lower() == 'desc' else 'ASC'
+    
+    # 🎯 2. Initialize search variables
+    where_clause = ""
+    params = []
+    
+    if search_term:
+        search_param = f"%{search_term.lower()}%"
+        # Adjust columns based on what you want to search (e.g., despesas and descricao)
+        where_clause = """
+            WHERE 
+                LOWER(despesas) LIKE %s OR 
+                LOWER(descricao) LIKE %s
+        """
+        params = [search_param, search_param] # Two parameters for two %s in the WHERE clause
 
     sql = f"""
         SELECT id, despesas, descricao, valor, data
         FROM public.Spents
+        {where_clause}
         ORDER BY {column_name} {order}
     """
 
-    cur.execute(sql)
+    cur.execute(sql, params) # 🎯 3. Pass parameters to cur.execute()
     rows = cur.fetchall()
 
     cur.close()
@@ -279,12 +309,32 @@ VALID_COLUMNS_INVESTMENTS = {
 }
 
 
-def list_investments(sort_by='data_investimento', sort_order='asc'):
+def list_investments(sort_by='data_investimento', sort_order='asc', search_term=None):
     conn = get_conn()
     cur = conn.cursor()
 
     column_name = VALID_COLUMNS_INVESTMENTS.get(sort_by.lower(), 'data_investimento')
     order = 'DESC' if sort_order.lower() == 'desc' else 'ASC'
+
+    # 2. Build the WHERE clause for searching
+    where_clause = ""
+    # Parameters for the query (initially empty)
+    params = []
+    
+    if search_term:
+        # Lowercase the search term for case-insensitive matching
+        # Adjust the columns you want to search through. 
+        # Here, we search 'data', 'Receita', and 'Descricao'.
+        where_clause = """
+            WHERE 
+                LOWER(CAST(tipo AS TEXT)) LIKE %s OR 
+                LOWER(instituicao) LIKE %s OR 
+                LOWER(ticker) LIKE %s
+        """
+        # Add the search term as a parameter for each field to prevent SQL Injection
+        # We use '%' for wildcards in SQL LIKE queries.
+        search_param = f"%{search_term.lower()}%"
+        params = [search_param, search_param, search_param]
 
     sql = f"""
         SELECT 
@@ -292,10 +342,11 @@ def list_investments(sort_by='data_investimento', sort_order='asc'):
             preco_unit, valor, data_investimento, 
             data_vencimento, origem, ativo
         FROM public.Investments
+        {where_clause}
         ORDER BY {column_name} {order}
     """
 
-    cur.execute(sql)
+    cur.execute(sql, params)
     rows = cur.fetchall()
 
     cur.close()
@@ -303,24 +354,41 @@ def list_investments(sort_by='data_investimento', sort_order='asc'):
 
     return rows
 
-def list_investments_active(active=None, sort_by='data_investimento', sort_order='desc'):
+def list_investments_active(active=None, sort_by='data_investimento', sort_order='desc', search_term=None):
     conn = get_conn()
     cur = conn.cursor()
 
-    VALID_COLUMNS = {
-        # same as before
-    }
+    # VALID_COLUMNS is omitted for brevity, but assume it's there
+    # ...
 
     column_name = VALID_COLUMNS.get(sort_by.lower(), 'data_investimento')
     order = 'DESC' if sort_order.lower() == 'desc' else 'ASC'
-
-    # Dynamic SQL
-    if active is None:
-        where_clause = ""
-        params = ()
-    else:
-        where_clause = "WHERE ativo = %s"
-        params = (active,)
+    
+    # 🎯 FIX 1: Initialize where_conditions and params
+    where_conditions = []
+    params = []
+    
+    # --- 1. Filter by Active Status ---
+    if active is not None:
+        where_conditions.append("ativo = %s")
+        params.append(active)
+    
+    # --- 2. Filter by Search Term ---
+    if search_term:
+        search_param = f"%{search_term.lower()}%"
+        # 🎯 FIX 2: Define the search clause. 
+        # Note the use of 'OR' to combine columns for searching.
+        search_clause = """
+            (LOWER(CAST(tipo AS TEXT)) LIKE %s OR 
+             LOWER(instituicao) LIKE %s OR 
+             LOWER(ticker) LIKE %s)
+        """
+        where_conditions.append(search_clause)
+        # Add the search term as a parameter for each field
+        params.extend([search_param, search_param, search_param])
+    
+    # --- 3. Construct Final WHERE Clause ---
+    where_clause = "WHERE " + " AND ".join(where_conditions) if where_conditions else ""
 
     sql = f"""
         SELECT 
@@ -339,7 +407,6 @@ def list_investments_active(active=None, sort_by='data_investimento', sort_order
     conn.close()
 
     return rows
-
 
 
 def get_investment_by_id(iid):

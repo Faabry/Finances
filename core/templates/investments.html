@@ -14,19 +14,66 @@
         <h2 style="color: aliceblue;">Investments</h2>
         <a href="{% url 'create_investment' %}" class="btn" style="background-color: #91465e; color: aliceblue;">+ Add</a>
     </div>
-    <div class="mb-3">
+    <!-- <div class="mb-3">
         <a href="?active=true" class="btn btn-outline-success btn-sm">Ativos</a>
         <a href="?active=false" class="btn btn-outline-danger btn-sm">Inativos</a>
         <a href="?" class="btn btn-outline-secondary btn-sm">Todos</a>
-    </div>
+    </div> -->
+    <div class="mb-3">
+    {% comment %} Define base parameters to keep sorting and searching {% endcomment %}
+    {% with base_params='sort='|add:current_sort|add:'&order='|add:current_order %}
+    
+    {% comment %} Add search parameter if it exists {% endcomment %}
+    {% if current_search %}
+        {% with base_params=base_params|add:'&search='|add:current_search %}
+        {% endwith %}
+    {% endif %}
+
+    <a href="?{{ base_params }}{% if current_search %}&search={{ current_search }}{% endif %}&active=true&page={{ transactions.number }}" 
+       class="btn {% if current_active == True %}btn-success{% else %}btn-outline-success{% endif %} btn-sm">
+        Ativos
+    </a>
+    
+    <a href="?{{ base_params }}{% if current_search %}&search={{ current_search }}{% endif %}&active=false&page={{ transactions.number }}" 
+       class="btn {% if current_active == False %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm">
+        Inativos
+    </a>
+    
+    <a href="?{{ base_params }}{% if current_search %}&search={{ current_search }}{% endif %}&page={{ transactions.number }}" 
+       class="btn {% if current_active is None %}btn-secondary{% else %}btn-outline-secondary{% endif %} btn-sm">
+        Todos
+    </a>
+    
+    {% endwith %}
+</div>
+    <form method="GET" action="." class="mb-3">
+        <div class="input-group">
+            <input type="hidden" name="sort" value="{{ current_sort }}">
+            <input type="hidden" name="order" value="{{ current_order }}">
+
+            <input type="text" 
+                   name="search" 
+                   class="form-control" 
+                   placeholder="Search..." 
+                   aria-label="Search" 
+                   value="{{ current_search }}"
+                   style="background-color: #171717; color: aliceblue; border-color: gray;">
+            <button class="btn" type="submit" style="border-color: #c89b14; color: #c89b14; background-color: #171717;">
+                <b>Search</b>
+            </button>
+            {% if current_search %}
+                <a href="?sort={{ current_sort }}&order={{ current_order }}{% if current_active is not None %}&active={{ current_active }}{% endif %}" class="btn btn-secondary">Clear</a>
+            {% endif %}
+        </div>
+    </form>
     <div class="table-responsive">
         <table class="table-striped table-hover table-bordered align-middle" style="background-color: #171717; width: 100%; margin-bottom: 1rem;">
             <thead style="color: aliceblue; background-color: #212121;">
-                <tr>
+                <tr class="text-center">
                     <th>
-                        <a href="?sort=id&order={% if current_sort == 'id' and current_order == 'asc' %}desc{% else %}asc{% endif %}"
-                        style="text-decoration: none; color: aliceblue;">
-                            Id
+                        <a href="?sort=id&order={% if current_sort == 'id' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_active is not None %}&active={{ current_active }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}&page={{ transactions.number }}"
+                        style="text-decoration: none; color: aliceblue;">   
+                            Id                         
                             {% if current_sort == 'id' %}
                                 {% if current_order == 'asc' %} ▲ {% else %} ▼ {% endif %}
                             {% endif %}
@@ -40,7 +87,7 @@
                     <th>Preço Unit.</th>
                     <th>Valor</th>
                     <th>
-                        <a href="?sort=data_investimento&order={% if current_sort == 'data_investimento' and current_order == 'asc' %}desc{% else %}asc{% endif %}"
+                        <a href="?sort=data_investimento&order={% if current_sort == 'data_investimento' and current_order == 'asc' %}desc{% else %}asc{% endif %}{% if current_active is not None %}&active={{ current_active }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}&page={{ transactions.number }}"
                         style="text-decoration: none; color: aliceblue;">
                             Data Investimento
                             {% if current_sort == 'data_investimento' %}
@@ -90,7 +137,7 @@
     {% if transactions.has_previous %}
         <li class="page-item">
             <a  class="btn" 
-                href="?sort={{ current_sort }}&order={{ current_order }}&page={{ transactions.previous_page_number }}" 
+                href="?sort={{ current_sort }}&order={{ current_order }}{% if current_active is not None %}&active={{ current_active }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}&page={{ transactions.previous_page_number }}"  
                 style="border: solid; border-width: thin; background-color: #171717; color: gray;">
                 ⇐
             </a>
@@ -130,7 +177,7 @@
     {% if transactions.has_next %}
         <li class="page-item">
             <a  class="btn" 
-                href="?sort={{ current_sort }}&order={{ current_order }}&page={{ transactions.next_page_number }}"           
+                href="?sort={{ current_sort }}&order={{ current_order }}{% if current_active is not None %}&active={{ current_active }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}&page={{ transactions.next_page_number }}"           
                 style="border: solid; border-width: thin; background-color: #171717; color: gray;">
                 ⇒
             </a>
