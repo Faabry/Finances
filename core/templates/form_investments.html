@@ -5,18 +5,33 @@
 <div class="container my-5">
 
     <div class="shadow-lg" 
-         style="background-color: #171717; border: solid thin; border-radius: 10px; padding: 1.5rem;">
+        style="background-color: #171717; border: solid thin; border-radius: 10px; padding: 1.5rem;">
 
-        <div class="text-white d-flex align-items-center px-3 mb-4"
-             style="background-color: #212121; height: 4rem; border-radius: 10px;">
-            <h3 class="mb-0">
+        <div class="d-flex justify-content-between align-items-center px-3 mb-4"
+              style="background-color: #212121; height: 4rem; border-radius: 10px;">
+            <h3 class="mb-0 text-white">
                 {% if is_edit %}
-                    ✏️ Edit Investment (ID: {{ tid }})
+                    ✏️ Edit Investment (ID: {{ iid }})
                 {% else %}
                     ➕ New Investment
                 {% endif %}
             </h3>
-        </div>
+
+            {% if is_edit %}
+            <div class="form-check form-switch form-check-lg">
+                <!-- <input class="form-check-input" type="checkbox" id="{{ form.ativo.id_for_label }}" name="{{ form.ativo.name }}" 
+                       {% if form.ativo.value %}checked{% endif %} 
+                       style="margin-left: -2.5rem; transform: scale(1.5);"> -->
+                <!-- <label class="form-check-label text-white ms-4" for="{{ form.ativo.id_for_label }}">
+                    {% if form.ativo.value %}
+                        **ACTIVE**
+                    {% else %}
+                        **INACTIVE**
+                    {% endif %}
+                </label> -->
+            </div>
+            {% endif %}
+            </div>
 
         <form method="post">
             {% csrf_token %}
@@ -24,9 +39,30 @@
             <div class="card-body px-2">
 
                 <h5 class="mb-3" style="color: aliceblue;">Expense Details</h5>
-
+                
                 <div class="row g-4 mb-4">
-
+                    
+                    {% if is_edit %}
+                    <div class="col-md-3 d-flex align-items-end mb-4">
+                        <div class="form-check form-switch form-check-lg pt-2">
+                            <label class="form-label fw-bold d-block" style="color: aliceblue; margin-bottom: 0.5rem;">{{ form.ativo.label }}</label>
+                            
+                            {% if form.ativo.value %}
+                            <input class="form-check-input" type="checkbox" id="{{ form.ativo.id_for_label }}" name="{{ form.ativo.name }}" checked>
+                            {% else %}
+                            <input class="form-check-input" type="checkbox" id="{{ form.ativo.id_for_label }}" name="{{ form.ativo.name }}">
+                            {% endif %}
+                            
+                            <label class="form-check-label" for="{{ form.ativo.id_for_label }}" style="color: aliceblue;">
+                                {% if form.ativo.value %}
+                                    **Active**
+                                {% else %}
+                                    **Inactive**
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="col-md-3">
                         <label class="form-label fw-bold" style="color: aliceblue;">{{ form.data_investimento.label }}</label>
                         {{ form.data_investimento|add_class:"form-control form-control-lg" }}
@@ -49,7 +85,7 @@
 
                     <div class="col-md-3">
                         <label class="form-label fw-bold" style="color: aliceblue">{{ form.quantidade.label }}</label>
-                        {{ form.quantidade|add_class:"form-control form-control-lg" }}
+                        {{ form.quantidade|add_class:"form-control form-control-lg"|attr:"id:id_quantidade" }}
                     </div>
 
                     <div class="col-md-3 d-flex align-items-end">
@@ -69,7 +105,7 @@
                         <label class="form-label fw-bold" style="color: aliceblue">{{ form.preco_unit.label }}</label>
                         <div class="input-group input-group-lg">
                             <span class="input-group-text">$</span>
-                            {{ form.preco_unit|attr:"placeholder:0.00"|add_class:"form-control" }}
+                            {{ form.preco_unit|attr:"placeholder:0.00"|add_class:"form-control"|attr:"id:id_preco_unit" }}
                         </div>
                     </div>
 
@@ -77,22 +113,29 @@
                         <label class="form-label fw-bold" style="color: aliceblue">{{ form.valor.label }}</label>
                         <div class="input-group input-group-lg">
                             <span class="input-group-text">$</span>
-                            {{ form.valor|attr:"placeholder:0.00"|add_class:"form-control" }}
+                            {{ form.valor|attr:"placeholder:0.00"|add_class:"form-control"|attr:"id:id_valor" }}
                         </div>
                     </div>
 
-                    <div class="col-md-8"> <label for="{{ form.origem.id_for_label }}" class="form-label fw-bold" style="color: aliceblue"> {{ form.origem.label }} </label> {{ form.origem|add_class:"form-control form-control-lg"|attr:"placeholder:e.g., utilities, travel, office expenses..." }} {% for error in form.origem.errors %} <div class="invalid-feedback d-block">{{ error }}</div> {% endfor %} </div>
+                    <div class="col-md-8"> 
+                        <label for="{{ form.origem.id_for_label }}" class="form-label fw-bold" style="color: aliceblue"> {{ form.origem.label }} </label> 
+                        {{ form.origem|add_class:"form-control form-control-lg"|attr:"placeholder:e.g., utilities, travel, office expenses..." }} 
+                        {% for error in form.origem.errors %} 
+                            <div class="invalid-feedback d-block">{{ error }}</div> 
+                        {% endfor %} 
+                    </div>
+                </div>
             </div>
 
             <div class="card-footer border-0 pt-4 pb-2 d-flex justify-content-end">
-                <a href="{% url 'create_investment' %}" class="btn btn-lg btn-outline-secondary me-3">
+                <a href="{% url 'investments_list' %}" class="btn btn-lg btn-outline-secondary me-3">
                     Cancel
                 </a>
                 <button type="submit" class="btn btn-lg btn-success">
                     {% if is_edit %}
                         💾 Update Record
                     {% else %}
-                        ✅ Save Spent
+                        ✅ Save Investment
                     {% endif %}
                 </button>
             </div>
@@ -100,4 +143,34 @@
         </form>
     </div>
 </div>
+
+<script>
+    function calculateTotalValue() {
+        const quantidadeInput = document.getElementById('id_quantidade');
+        const precoUnitInput = document.getElementById('id_preco_unit');
+        const valorInput = document.getElementById('id_valor');
+
+        const quantidade = parseFloat(quantidadeInput.value.replace(',', '.')) || 0;
+        const precoUnit = parseFloat(precoUnitInput.value.replace(',', '.')) || 0;
+
+        let totalValue = quantidade * precoUnit;
+
+        if (valorInput) {
+            valorInput.value = totalValue.toFixed(2);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const quantidadeInput = document.getElementById('id_quantidade');
+        const precoUnitInput = document.getElementById('id_preco_unit');
+        
+        if (quantidadeInput) {
+            quantidadeInput.addEventListener('input', calculateTotalValue);
+        }
+        if (precoUnitInput) {
+            precoUnitInput.addEventListener('input', calculateTotalValue);
+        }
+    });
+</script>
+
 {% endblock content %}
