@@ -1,0 +1,15 @@
+[project]
+name = "financesv2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dotenv>=0.9.9",
+    "pandas>=2.3.3",
+    "plotly>=6.6.0",
+    "psycopg2>=2.9.11",
+    "streamlit>=1.55.0",
+    "streamlit-aggrid>=1.2.1.post2",
+    "supabase>=2.28.3",
+]
