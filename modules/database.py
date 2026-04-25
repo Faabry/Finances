@@ -78,6 +78,7 @@ def render_simple_form(table_name):
         "Outros"] if table_name == "revenues" else [
                                                 "Alimentação", 
                                                 "Mobilidade",
+                                                "Moradia",
                                                 "Operadora",
                                                 "Cachorros",
                                                 "Igreja",
@@ -124,7 +125,7 @@ def render_investment_form():
     is_edit = edit_data is not None
 
     investment_types = [
-    "Tesouro Direto", "LIC", "LCA", "Fundos", "FIIs", 
+    "Tesouro Direto", "CDB", "LIC", "LCA", "Fundos", "FIIs", 
     "ETFs", "Ações", "Outros", "Cripto", 
     "Reserva de Emergência", "Internacional"
     ]
@@ -145,6 +146,12 @@ def render_investment_form():
         "Inter", 
         "Mercado Pago", 
         "Outros"]
+    
+    origin_options = [
+        "Salário",
+        "Reserva Emerg.",
+        "Rendimentos"
+    ]
 
     with st.form("invest_form"):
         st.write("### Investment Details")
@@ -162,7 +169,12 @@ def render_investment_form():
             )
             ticker = st.text_input("Ticker", value=edit_data["ticker"] if is_edit else "")
             quant = st.number_input("Quantidade", value=float(edit_data["quantidade"]) if is_edit else 0.0)
-            data_inv = st.date_input("Data Investimento", value=pd.to_datetime(edit_data["data_investimento"]) if is_edit else None)
+
+            col1_1, col1_2 = st.columns(2)
+            with col1_1:
+                data_inv = st.date_input("Data Investimento", value=pd.to_datetime(edit_data["data_investimento"]) if is_edit else None)
+            with col1_2:
+                data_venc = st.date_input("Data Vencimento", value=pd.to_datetime(edit_data["data_vencimento"]) if is_edit else None)
         with col2:
             default_index = 0
             if is_edit and edit_data.get("Instituicao") in investment_types:
@@ -173,20 +185,42 @@ def render_investment_form():
                 options=institution_options, 
                 index=default_index
             )
+
+            origin = st.selectbox(
+                "Origin",
+                options=origin_options,
+                index=0
+
+            )
             col3, col4 = st.columns(2)
             with col3:                    
                 valor_unit = st.number_input("Unit Price", value=float(edit_data["preco_unit"]) if is_edit else 0.0)
             with col4:
                 valor = quant * valor_unit
                 # valor = st.number_input("Valor Total", value=total, format="%.2f")
-            ativo = st.checkbox("Ativo", value=edit_data["ativo"] if is_edit else True)
+
+            col5, col6 = st.columns(2)
+            with col5:
+                ativo = st.checkbox("Ativo", value=edit_data["ativo"] if is_edit else True)
+            with col6:
+                aporte = st.checkbox("Aporte", value=edit_data["aporte"] if is_edit else True)
 
         if st.form_submit_button("Save Investment"):
             # Payload matching your detailed 11-column structure
+            # Create the payload without the list brackets
             payload = {
-                "tipo": tipo, "instituicao": inst, "ticker": ticker,
-                "quantidade": quant, "preco_unit": valor_unit, "valor": valor, "ativo": ativo,
-                "data_investimento": str(data_inv)
+                "tipo": tipo, 
+                "instituicao": inst, 
+                "ticker": ticker, 
+                "aporte": aporte,
+                "quantidade": quant, 
+                "preco_unit": valor_unit, 
+                "valor": valor, 
+                "ativo": ativo,
+                "data_investimento": str(data_inv), 
+                # Logic: if data_venc exists, convert to string; otherwise, use None
+                "data_vencimento": str(data_venc) if data_venc else None, 
+                "origem": origin
             }
             if is_edit:
                 get_supabase().table("investments").update(payload).eq("id", edit_data["id"]).execute()
