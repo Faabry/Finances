@@ -1,0 +1,45 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background-color: #171717;">
+    <div class="container">
+        
+        <img src="{% static 'img/logo_finance.png' %}" style="height: 90px;" 
+                 class="d-inline-block align-text-top me-2">
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#navbarNav" aria-controls="navbarNav" 
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+        <li class="nav-item">
+            <a class="nav-link text-secondary" href="{% url 'index' %}">
+                Revenues
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link text-secondary" href="{% url 'spents_list' %}">
+                Spents
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link text-secondary" href="{% url 'investments_list' %}">
+                Investments
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link text-secondary" href="{% url 'dashboard' %}">
+                Dashboard
+            </a>
+        </li>
+
+    </ul>
+</div>
+
+    </div>
+</nav>
