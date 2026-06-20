@@ -81,7 +81,20 @@ def delete_revenue(row_id):
 
 # region investments
 def get_investments():
-    response = get_supabase().table("investments").select("*").execute()
+    response = get_supabase().table("investments")\
+                .select("id",
+                        "tipo",
+                        "instituicao",
+                        "ticker","" \
+                        "aporte",
+                        "quantidade",
+                        "preco_unit",
+                        "valor",
+                        "data_transacao",
+                        "data_vencimento",
+                        "origem",
+                        "tipo_transacao").order("id", desc=True)\
+                .limit(2000).execute()
     return response.data
 
 def save_revenue_to_supabase(investiment_type:str, 
