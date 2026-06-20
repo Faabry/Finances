@@ -131,12 +131,14 @@ def render_investment_form():
     ]
 
     institution_options = [
-        "Banco do Brasil", "Caixa Econômica",
+        "Inter", 
+        "Banco do Brasil", 
+        "Caixa Econômica",
         "Bradesco",
         "Itaú",
         "Santander", 
         "Nubank", 
-        "Inter", 
+        "Sofisa",
         "C6 Bank", 
         "XP Investimentos", 
         "Rico",         
@@ -151,6 +153,11 @@ def render_investment_form():
         "Salário",
         "Reserva Emerg.",
         "Rendimentos"
+    ]
+
+    transaction_options = [
+        "COMPRA",
+        "VENDA"
     ]
 
     with st.form("invest_form"):
@@ -172,7 +179,7 @@ def render_investment_form():
 
             col1_1, col1_2 = st.columns(2)
             with col1_1:
-                data_inv = st.date_input("Data Investimento", value=pd.to_datetime(edit_data["data_investimento"]) if is_edit else None)
+                data_inv = st.date_input("Data Transação", value=pd.to_datetime(edit_data["data_transacao"]) if is_edit else None)
             with col1_2:
                 data_venc = st.date_input("Data Vencimento", value=pd.to_datetime(edit_data["data_vencimento"]) if is_edit else None)
         with col2:
@@ -199,9 +206,27 @@ def render_investment_form():
                 valor = quant * valor_unit
                 # valor = st.number_input("Valor Total", value=total, format="%.2f")
 
+            # col5, col6 = st.columns(2)
+            # with col5:
+            #     ativo = st.checkbox("Ativo", value=edit_data["ativo"] if is_edit else True)
+            # with col6:
+            #     aporte = st.checkbox("Aporte", value=edit_data["aporte"] if is_edit else True)
+
             col5, col6 = st.columns(2)
+
             with col5:
-                ativo = st.checkbox("Ativo", value=edit_data["ativo"] if is_edit else True)
+                # Lógica para pegar o valor padrão ao editar
+                default_transaction_index = 0
+                if is_edit and edit_data.get("tipo_transacao") in transaction_options:
+                    default_transaction_index = transaction_options.index(edit_data["tipo_transacao"])
+
+                # Componente direto, sem with, corrigindo select_box para selectbox
+                transaction_type = st.selectbox(
+                    "Tipo de Transação", 
+                    options=transaction_options,
+                    index=default_transaction_index
+                )
+
             with col6:
                 aporte = st.checkbox("Aporte", value=edit_data["aporte"] if is_edit else True)
 
@@ -216,8 +241,9 @@ def render_investment_form():
                 "quantidade": quant, 
                 "preco_unit": valor_unit, 
                 "valor": valor, 
-                "ativo": ativo,
-                "data_investimento": str(data_inv), 
+                # "ativo": ativo,
+                "data_transacao": str(data_inv), 
+                "tipo_transacao": transaction_type,
                 # Logic: if data_venc exists, convert to string; otherwise, use None
                 "data_vencimento": str(data_venc) if data_venc else None, 
                 "origem": origin
