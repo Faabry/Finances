@@ -44,10 +44,20 @@ def delete_revenue(row_id):
 
 # region spents
 def get_spents():
-    response = get_supabase().table("spents")\
-                .select("*").order("id", desc=True)\
-                .limit(2000).execute()
-    return response.data
+    # Busca em paginas: o Supabase limita as linhas por requisicao e a tabela ja
+    # passa de 2000 linhas (as compras parceladas aceleram esse crescimento).
+    rows = []
+    page_size = 1000
+    offset = 0
+    while True:
+        response = get_supabase().table("spents")\
+                    .select("*").order("id", desc=True)\
+                    .range(offset, offset + page_size - 1).execute()
+        rows.extend(response.data)
+        if len(response.data) < page_size:
+            break
+        offset += page_size
+    return rows
 
 def save_spents_to_supabase(date, spent, description, value):
     # Supabase .insert() needs a dictionary: {"column_name": value}
@@ -61,7 +71,15 @@ def save_spents_to_supabase(date, spent, description, value):
     response = get_supabase().table("spents").insert(data).execute()
     return response.data
 
-def update_revenue_to_supabase(date, spent, description, value):
+def save_spents_bulk_to_supabase(rows):
+    # Insere N despesas em uma unica requisicao (INSERT multi-linha, atomico).
+    # Usada pelas compras parceladas. Retorna as linhas criadas, com os ids.
+    if not rows:
+        return []
+    response = get_supabase().table("spents").insert(rows).execute()
+    return response.data
+
+def update_spent_to_supabase(date, spent, description, value):
     # Supabase .insert() needs a dictionary: {"column_name": value}
     # Ensure these keys match your Supabase column names exactly!
     data = {
@@ -73,7 +91,7 @@ def update_revenue_to_supabase(date, spent, description, value):
     response = get_supabase().table("spents").update(data).execute()
     return response.data
 
-def delete_revenue(row_id):
+def delete_spent(row_id):
     get_supabase().table("spents").delete().eq("id", row_id).execute()
 
 # endregion spents
@@ -97,7 +115,7 @@ def get_investments():
                 .limit(2000).execute()
     return response.data
 
-def save_revenue_to_supabase(investiment_type:str, 
+def save_investment_to_supabase(investiment_type:str, 
                                institution:str, 
                                ticker:str,
                                contribution:str,
@@ -126,7 +144,7 @@ def save_revenue_to_supabase(investiment_type:str,
     response = get_supabase().table("investments").insert(data).execute()
     return response.data
 
-def update_revenue_to_supabase(investiment_type:str, 
+def update_investment_to_supabase(investiment_type:str, 
                                institution:str, 
                                ticker:str,
                                contribution:str,
@@ -155,7 +173,7 @@ def update_revenue_to_supabase(investiment_type:str,
     response = get_supabase().table("investments").update(data).execute()
     return response.data
 
-def delete_revenue(row_id):
+def delete_investment(row_id):
     get_supabase().table("investments").delete().eq("id", row_id).execute()
 
 # endregion investments

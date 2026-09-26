@@ -1,9 +1,12 @@
 import streamlit as st
 from modules.database import *
 from modules.dashboard import *
+from services.auth import check_password
 import plotly.express as px
 
 st.set_page_config(layout="wide", page_title="FinancesV2", page_icon="💰")
+
+check_password()
 
 st.divider() # Adds a clean horizontal line like an <hr> tag
 

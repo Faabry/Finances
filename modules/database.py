@@ -2,6 +2,30 @@ import streamlit as st
 from services.db_connection import *
 import pandas as pd
 
+# --- PARCELAS (compras parceladas) ---
+def build_parcela_rows(base_date, category, desc, total_value, num_parcelas, intervalo_meses=1):
+    """Divide o valor total em N linhas mensais.
+
+    - O calculo e feito em centavos (int) e o resto vai para a ULTIMA parcela,
+      para que a soma das parcelas seja exatamente o valor total.
+    - A 1a parcela cai na data informada e as demais a cada `intervalo_meses`.
+    """
+    total_cents = round(float(total_value) * 100)
+    base_cents, resto = divmod(total_cents, num_parcelas)
+    base = pd.Timestamp(base_date)
+
+    rows = []
+    for i in range(1, num_parcelas + 1):
+        cents = base_cents + (resto if i == num_parcelas else 0)
+        venc = (base + pd.DateOffset(months=(i - 1) * intervalo_meses)).date()
+        rows.append({
+            "data": venc.isoformat(),
+            "despesas": category,
+            "descricao": f"{desc} {i}/{num_parcelas}",
+            "valor": round(cents / 100, 2),
+        })
+    return rows
+
 # --- HELPER LOGIC ---
 def show_table_view(table_name, fetch_func):
     """Renders the table and handles row selection for Edit/Delete"""
@@ -16,11 +40,16 @@ def show_table_view(table_name, fetch_func):
             render_simple_form(table_name)
         return
 
+    flash = st.session_state.pop(f"flash_{table_name}", None)
+    if flash:
+        st.success(flash)
+
     data = fetch_func()
     st.subheader(f"{table_name.capitalize()}")
     
     if st.button(f"Add {table_name[:-1]}", key=f"new_{table_name}", type="secondary"):
         st.session_state.editing_row = None
+        st.session_state.pop(f"parcela_toggle_{table_name}", None)
         st.session_state[view_key] = "form"
         st.rerun()
     
@@ -96,24 +125,57 @@ def render_simple_form(table_name):
                                                 "Outros"]
 
     # with st.form("simple_form"):
+    # O checkbox fica FORA do form: widgets dentro de um st.form nao disparam rerun,
+    # entao os campos de parcelas so apareceriam depois de clicar em Save.
+    is_parcelada = False
+    if table_name == "spents" and not is_edit:
+        is_parcelada = st.checkbox("Compra parcelada?", key=f"parcela_toggle_{table_name}")
+
     with st.form(key=f"form_{table_name}"):
         st.write(f"### {"Edit" if is_edit else "New"} {table_name[:-1]}")
         date = st.date_input("Date", value=pd.to_datetime(edit_data["data"]) if is_edit else None)
         category = st.selectbox("Category", categories, 
                                 index=categories.index(edit_data[cat_col]) if is_edit else 0)
         desc = st.text_input("Description", value=edit_data["descricao"] if is_edit else "")
-        val = st.number_input("Value", value=float(edit_data["valor"]) if is_edit else 0.0)
+        val = st.number_input("Value (total da compra)" if is_parcelada else "Value",
+                              value=float(edit_data["valor"]) if is_edit else 0.0)
+
+        num_parcelas = 0
+        intervalo = 1
+        if is_parcelada:
+            num_parcelas = st.number_input("Número de parcelas", min_value=2, max_value=48, value=2, step=1)
+            intervalo = st.number_input("Intervalo (meses)", min_value=1, max_value=12, value=1, step=1)
+            st.caption("O valor informado é o total da compra e será dividido entre as parcelas. "
+                       "A 1ª parcela cai na data informada.")
 
         # Submit button inside the form
         if st.form_submit_button("Save"):
-            payload = {"data": str(date), cat_col: category, "descricao": desc, "valor": val}
-            if is_edit:
-                get_supabase().table(table_name).update(payload).eq("id", edit_data["id"]).execute()
+            if is_parcelada:
+                if date is None:
+                    st.error("Selecione a data da 1ª parcela.")
+                elif val <= 0:
+                    st.error("O valor total da compra deve ser maior que zero.")
+                elif not desc.strip():
+                    st.error("Informe uma descrição (ex: Mecânico).")
+                else:
+                    rows = build_parcela_rows(date, category, desc.strip(), val,
+                                              int(num_parcelas), int(intervalo))
+                    created = save_spents_bulk_to_supabase(rows)
+                    st.session_state[f"flash_{table_name}"] = (
+                        f"{len(rows)} parcelas criadas: {len(rows)}x de R$ {rows[0]['valor']:.2f} "
+                        f"(total R$ {val:.2f})."
+                    )
+                    st.session_state[f"view_{table_name}"] = "table"
+                    st.rerun()
             else:
-                get_supabase().table(table_name).insert(payload).execute()
-            
-            st.session_state[f"view_{table_name}"] = "table"
-            st.rerun()
+                payload = {"data": str(date), cat_col: category, "descricao": desc, "valor": val}
+                if is_edit:
+                    get_supabase().table(table_name).update(payload).eq("id", edit_data["id"]).execute()
+                else:
+                    get_supabase().table(table_name).insert(payload).execute()
+                
+                st.session_state[f"view_{table_name}"] = "table"
+                st.rerun()
 
     if st.button("Cancel", type="primary", key=f"cancel_{table_name}"):
         st.session_state[f"view_{table_name}"] = "table"
